@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  ADMIN
+}
+
+enum RuleType {
+  DISCRETE
+  LOOKUP_TABLE
+}
+
+enum RuleCategory {
+  BANNED_WORD
+  REQUIRED_PHRASING
+  TONE_VOICE
+  STRUCTURAL_FORMATTING
+  NAMING_CONVENTION
+  POV_VOICE_RESTRICTION
+  GRAMMAR_MECHANICAL
+  OTHER
+}
+
+enum Severity {
+  HARD
+  STYLE
+}
+
+enum RuleStatus {
+  PENDING
+  ACTIVE
+  ARCHIVED
+  NEEDS_REVIEW
+}
+
+enum FlagSource {
+  CLIENT_RULE
+  GRAMMAR
+}
+
+enum FlagStatus {
+  PENDING
+  ACCEPTED
+  DISMISSED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(EMPLOYEE)
+  createdAt    DateTime @default(now())
+
+  guidesUploaded    Guide[]         @relation("GuideUploadedBy")
+  rulesProposed     Rule[]          @relation("RuleProposedBy")
+  rulesApproved     Rule[]          @relation("RuleApprovedBy")
+  checksUploaded    DocumentCheck[] @relation("CheckUploadedBy")
+  flagsResolved     Flag[]          @relation("FlagResolvedBy")
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  guides         Guide[]
+  rules          Rule[]
+  documentChecks DocumentCheck[]
+}
+
+model Guide {
+  id           String   @id @default(cuid())
+  clientId     String
+  client       Client   @relation(fields: [clientId], references: [id])
+  filename     String
+  rawText      String
+  uploadedById String?
+  uploadedBy   User?    @relation("GuideUploadedBy", fields: [uploadedById], references: [id])
+  uploadedAt   DateTime @default(now())
+
+  // For an update to a client with existing active rules: which prior rule ids this
+  // guide's extraction matched (whether unchanged or superseded), so the review screen
+  // can compute "possibly removed" as prior active rules never matched by this guide.
+  diffSummary Json?
+
+  rules Rule[]
+}
+
+model Rule {
+  id          String       @id @default(cuid())
+  clientId    String
+  client      Client       @relation(fields: [clientId], references: [id])
+  ruleType    RuleType
+  category    RuleCategory
+  description String
+  patternLogic Json
+  severity    Severity
+  source      Json
+  status      RuleStatus   @default(ACTIVE)
+
+  guideId String?
+  guide   Guide?  @relation(fields: [guideId], references: [id])
+
+  proposedById String?
+  proposedBy   User?   @relation("RuleProposedBy", fields: [proposedById], references: [id])
+  approvedById String?
+  approvedBy   User?   @relation("RuleApprovedBy", fields: [approvedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  flags Flag[]
+}
+
+model DocumentCheck {
+  id           String   @id @default(cuid())
+  clientId     String
+  client       Client   @relation(fields: [clientId], references: [id])
+  documentName String
+  rawText      String
+  uploadedById String?
+  uploadedBy   User?    @relation("CheckUploadedBy", fields: [uploadedById], references: [id])
+  uploadedAt   DateTime @default(now())
+
+  flags Flag[]
+}
+
+model Flag {
+  id              String        @id @default(cuid())
+  documentCheckId String
+  documentCheck   DocumentCheck @relation(fields: [documentCheckId], references: [id])
+  ruleId          String?
+  rule            Rule?         @relation(fields: [ruleId], references: [id])
+  flagSource      FlagSource
+  category        RuleCategory
+  severity        Severity
+  location        Json
+  matchedText     String
+  message         String
+  status          FlagStatus    @default(PENDING)
+
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+  resolvedById String?
+  resolvedBy   User?     @relation("FlagResolvedBy", fields: [resolvedById], references: [id])
+}
