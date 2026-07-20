@@ -24,14 +24,19 @@ export async function Nav() {
               Check a document
             </Link>
             {user.role === "ADMIN" && (
-              <Link href="/admin/queue" className="hover:text-slate-900">
-                Admin queue
-                {pendingCount > 0 && (
-                  <span className="ml-1.5 rounded-full bg-slate-900 px-1.5 py-0.5 text-xs font-medium text-white">
-                    {pendingCount}
-                  </span>
-                )}
-              </Link>
+              <>
+                <Link href="/admin/queue" className="hover:text-slate-900">
+                  Admin queue
+                  {pendingCount > 0 && (
+                    <span className="ml-1.5 rounded-full bg-slate-900 px-1.5 py-0.5 text-xs font-medium text-white">
+                      {pendingCount}
+                    </span>
+                  )}
+                </Link>
+                <Link href="/admin/users" className="hover:text-slate-900">
+                  Users
+                </Link>
+              </>
             )}
           </nav>
         </div>
