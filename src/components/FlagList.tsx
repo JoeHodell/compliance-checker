@@ -15,6 +15,10 @@ export type FlagItem = {
   matchedText: string;
   message: string;
   status: "PENDING" | "ACCEPTED" | "DISMISSED";
+  /** A sentence or two of surrounding context from the document, not just the bare match. */
+  contextSnippet: string;
+  /** The client's own style guide copy this rule was extracted from, when available. */
+  ruleQuote: string | null;
 };
 
 type SortKey = "severity" | "category" | "status";
@@ -25,6 +29,23 @@ function categoryLabel(category: string) {
     .split("_")
     .map((w) => w[0]?.toUpperCase() + w.slice(1))
     .join(" ");
+}
+
+/** Renders a snippet of document text with the flagged substring highlighted. */
+function HighlightedSnippet({ snippet, matchedText }: { snippet: string; matchedText: string }) {
+  const index = matchedText ? snippet.indexOf(matchedText) : -1;
+  if (index === -1) {
+    return <>{snippet}</>;
+  }
+  const before = snippet.slice(0, index);
+  const after = snippet.slice(index + matchedText.length);
+  return (
+    <>
+      {before}
+      <mark className="rounded bg-amber-200 px-0.5 text-slate-900">{matchedText}</mark>
+      {after}
+    </>
+  );
 }
 
 export function FlagList({ flags: initialFlags }: { flags: FlagItem[] }) {
@@ -145,10 +166,15 @@ export function FlagList({ flags: initialFlags }: { flags: FlagItem[] }) {
                   <span className="text-xs text-slate-400">Grammar/Mechanical engine</span>
                 )}
               </div>
-              <p className="mb-1 rounded bg-slate-50 px-2 py-1 font-mono text-sm text-slate-800">
-                “{flag.matchedText}”
+              <p className="mb-2 rounded bg-slate-50 px-3 py-2 text-sm leading-relaxed text-slate-800">
+                “<HighlightedSnippet snippet={flag.contextSnippet} matchedText={flag.matchedText} />”
               </p>
               <p className="text-sm text-slate-600">{flag.message}</p>
+              {flag.ruleQuote && (
+                <p className="mt-2 border-l-2 border-slate-200 pl-2 text-xs italic text-slate-500">
+                  From the style guide: “{flag.ruleQuote}”
+                </p>
+              )}
               <p className="mt-1 text-xs text-slate-400">Paragraph {flag.location.paragraphIndex + 1}</p>
               <div className="mt-3 flex gap-2">
                 <Button
