@@ -1,5 +1,5 @@
 import type { Rule } from "@prisma/client";
-import { buildTermRegex, findMatches } from "@/lib/checking/deterministic";
+import { escapeRegex, findMatches } from "@/lib/checking/deterministic";
 import type { FlagCandidate } from "@/lib/checking/types";
 
 type DiscretePatternLogic = { checkMode?: "regex" | "literal" | "llm"; value?: string };
@@ -10,8 +10,11 @@ function spansOverlap(a: { start: number; end: number }, b: { start: number; end
   return a.start < b.end && a.end > b.start;
 }
 
-/** Suppression rules are matched exactly like DISCRETE literal/regex rules, but the resulting
- * spans are used to filter flags out rather than create new ones. */
+/** Suppression matching is deliberately narrower than a normal DISCRETE rule: literal mode is
+ * case-sensitive (exact match, not the acronym-aware case-insensitive matching used for
+ * positive rules), so suppressing a lowercase false positive like "am" can't also swallow
+ * legitimate uppercase matches like the "AM" in a flagged "10 AM". Regex mode still runs
+ * case-insensitively, same as everywhere else — write case-specific patterns by hand if needed. */
 function computeSuppressedSpans(paragraphs: string[], suppressionRules: Rule[]): SuppressedSpan[] {
   const spans: SuppressedSpan[] = [];
   for (const rule of suppressionRules) {
@@ -19,7 +22,10 @@ function computeSuppressedSpans(paragraphs: string[], suppressionRules: Rule[]):
     if (!logic.value || logic.checkMode === "llm") continue;
     let regex: RegExp;
     try {
-      regex = logic.checkMode === "regex" ? new RegExp(logic.value, "gi") : buildTermRegex(logic.value);
+      regex =
+        logic.checkMode === "regex"
+          ? new RegExp(logic.value, "gi")
+          : new RegExp(`\\b${escapeRegex(logic.value)}\\b`, "g");
     } catch {
       continue; // an invalid regex here just means this suppression rule does nothing
     }

@@ -68,6 +68,12 @@ export function SuppressFlagDialog({
               <Input value={value} onChange={(e) => setValue(e.target.value)} />
             </div>
           </div>
+          {checkMode === "literal" && (
+            <p className="text-xs text-slate-400">
+              Exact match is case-sensitive, so suppressing lowercase &ldquo;am&rdquo; won&apos;t also
+              hide a legitimate &ldquo;10 AM&rdquo; flag elsewhere in the rules.
+            </p>
+          )}
           {error && <p className="text-sm text-red-600">{error}</p>}
         </div>
         <div className="mt-5 flex justify-end gap-2">
