@@ -13,6 +13,7 @@ export type RuleRow = {
   status: string;
   patternLogic: unknown;
   source: unknown;
+  isSuppression: boolean;
 };
 
 type DiscreteLogic = { checkMode?: "regex" | "literal" | "llm"; value?: string; instruction?: string };
@@ -132,6 +133,11 @@ function RuleEditRow({ rule }: { rule: RuleRow }) {
           </span>
         </td>
         <td className="py-3 pr-3">
+          {rule.isSuppression && (
+            <span className="mb-1 inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-800">
+              Suppression
+            </span>
+          )}
           {editing ? (
             <Textarea
               value={description}

@@ -11,18 +11,18 @@ type LookupPatternLogic = {
   terms?: { wrong: string; right: string }[];
 };
 
-function escapeRegex(value: string) {
+export function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /** Acronyms (WHO, TB, PEPFAR) need case-sensitive matching — case-insensitive would
  * match ordinary lowercase words that happen to share the letters (e.g. "who"/"WHO"). */
-function buildTermRegex(term: string) {
+export function buildTermRegex(term: string) {
   const isAcronymLike = /^[A-Z]{2,}$/.test(term.trim());
   return new RegExp(`\\b${escapeRegex(term)}\\b`, isAcronymLike ? "g" : "gi");
 }
 
-function findMatches(paragraph: string, regex: RegExp) {
+export function findMatches(paragraph: string, regex: RegExp) {
   const matches: { start: number; end: number; text: string }[] = [];
   let m: RegExpExecArray | null;
   const re = new RegExp(regex.source, regex.flags.includes("g") ? regex.flags : regex.flags + "g");
@@ -38,7 +38,7 @@ export function runDeterministicChecks(paragraphs: string[], rules: Rule[]): Fla
   const candidates: FlagCandidate[] = [];
 
   for (const rule of rules) {
-    if (rule.status !== "ACTIVE") continue;
+    if (rule.status !== "ACTIVE" || rule.isSuppression) continue;
 
     if (rule.ruleType === "DISCRETE") {
       const logic = rule.patternLogic as DiscretePatternLogic;

@@ -31,6 +31,7 @@ export type PendingRuleItem = {
   proposedByEmail: string | null;
   quote: string | null;
   createdAt: string;
+  isSuppression: boolean;
 };
 
 export function AdminQueueItem({ item }: { item: PendingRuleItem }) {
@@ -63,9 +64,10 @@ export function AdminQueueItem({ item }: { item: PendingRuleItem }) {
   }
 
   if (resolved) {
+    const approvedText = item.isSuppression ? "Approved — now silencing matching flags." : "Approved — now active.";
     return (
       <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500 shadow-sm">
-        {resolved === "approved" ? "Approved — now active." : "Rejected."}
+        {resolved === "approved" ? approvedText : "Rejected."}
       </div>
     );
   }
@@ -74,6 +76,11 @@ export function AdminQueueItem({ item }: { item: PendingRuleItem }) {
     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <span className="text-xs font-medium text-slate-500">{item.clientName}</span>
+        {item.isSuppression && (
+          <span className="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-800">
+            Suppression
+          </span>
+        )}
         {editing ? (
           <Select value={category} onChange={(e) => setCategory(e.target.value)}>
             {CATEGORY_OPTIONS.map((c) => (

@@ -59,7 +59,7 @@ function isSelfNegating(reason: string): boolean {
 
 export async function runLlmChecks(paragraphs: string[], rules: Rule[]): Promise<FlagCandidate[]> {
   const llmRules = rules.filter((r) => {
-    if (r.status !== "ACTIVE" || r.ruleType !== "DISCRETE") return false;
+    if (r.status !== "ACTIVE" || r.ruleType !== "DISCRETE" || r.isSuppression) return false;
     const logic = r.patternLogic as DiscretePatternLogic;
     return logic.checkMode === "llm";
   });

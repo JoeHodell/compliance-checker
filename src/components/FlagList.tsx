@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, CategoryBadge, Select, SeverityBadge, StatusBadge } from "@/components/ui";
 import { ProposeRuleDialog } from "@/components/ProposeRuleDialog";
+import { SuppressFlagDialog } from "@/components/SuppressFlagDialog";
 
 export type FlagItem = {
   id: string;
@@ -56,6 +57,7 @@ export function FlagList({ flags: initialFlags }: { flags: FlagItem[] }) {
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [sortKey, setSortKey] = useState<SortKey>("severity");
   const [proposingFlagId, setProposingFlagId] = useState<string | null>(null);
+  const [suppressingFlagId, setSuppressingFlagId] = useState<string | null>(null);
 
   const categories = useMemo(
     () => Array.from(new Set(flags.map((f) => f.category))),
@@ -94,6 +96,7 @@ export function FlagList({ flags: initialFlags }: { flags: FlagItem[] }) {
   }
 
   const proposingFlag = flags.find((f) => f.id === proposingFlagId);
+  const suppressingFlag = flags.find((f) => f.id === suppressingFlagId);
 
   return (
     <div>
@@ -194,6 +197,9 @@ export function FlagList({ flags: initialFlags }: { flags: FlagItem[] }) {
                 <Button variant="ghost" onClick={() => setProposingFlagId(flag.id)}>
                   Propose a rule from this passage
                 </Button>
+                <Button variant="ghost" onClick={() => setSuppressingFlagId(flag.id)}>
+                  Suppress this
+                </Button>
               </div>
             </li>
           ))}
@@ -209,6 +215,18 @@ export function FlagList({ flags: initialFlags }: { flags: FlagItem[] }) {
           onClose={() => setProposingFlagId(null)}
           onProposed={() => {
             setProposingFlagId(null);
+            router.refresh();
+          }}
+        />
+      )}
+
+      {suppressingFlag && (
+        <SuppressFlagDialog
+          flagId={suppressingFlag.id}
+          matchedText={suppressingFlag.matchedText}
+          onClose={() => setSuppressingFlagId(null)}
+          onSuppressed={() => {
+            setSuppressingFlagId(null);
             router.refresh();
           }}
         />

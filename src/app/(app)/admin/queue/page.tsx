@@ -23,6 +23,7 @@ export default async function AdminQueuePage() {
     proposedByEmail: rule.proposedBy?.email ?? null,
     quote: (rule.source as { quote?: string }).quote ?? null,
     createdAt: rule.createdAt.toISOString(),
+    isSuppression: rule.isSuppression,
   }));
 
   return (

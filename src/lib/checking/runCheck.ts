@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { runDeterministicChecks } from "@/lib/checking/deterministic";
 import { runLlmChecks } from "@/lib/checking/llmCheck";
 import { runGrammarCheck } from "@/lib/checking/grammar";
+import { applySuppressions } from "@/lib/checking/suppression";
 
 export async function runDocumentCheck({
   clientId,
@@ -32,7 +33,13 @@ export async function runDocumentCheck({
     }),
   ]);
 
-  const allFlags = [...deterministicFlags, ...llmFlags, ...grammarFlags];
+  // Suppressions apply last, and across every source — a suppression rule can silence a
+  // client-rule flag, an LLM soft-rule flag, or a grammar flag alike.
+  const allFlags = applySuppressions(
+    [...deterministicFlags, ...llmFlags, ...grammarFlags],
+    paragraphs,
+    rules
+  );
 
   const documentCheck = await prisma.documentCheck.create({
     data: {

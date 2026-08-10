@@ -104,6 +104,10 @@ model Rule {
   severity    Severity
   source      Json
   status      RuleStatus   @default(ACTIVE)
+  // When true, a match against patternLogic removes any flag it overlaps (from any source —
+  // another rule or grammar) instead of creating a new one. Lets an employee kill a specific
+  // recurring false positive without having to find and edit the rule that's actually firing.
+  isSuppression Boolean @default(false)
 
   guideId String?
   guide   Guide?  @relation(fields: [guideId], references: [id])
