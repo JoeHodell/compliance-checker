@@ -35,13 +35,15 @@ For each rule, read the whole document and flag every passage that genuinely vio
 
 Only call report_flags with passages you are confident are real violations. The "flags" array is your final answer, not a scratchpad — do not include an entry for a passage you considered and ruled out. If a passage complies with the rule, is a borderline judgment call you're not confident about, or doesn't actually appear in the document, leave it out entirely rather than including it with a reason explaining why it doesn't count. If nothing in the document violates a given rule, report nothing for that rule.
 
-Bad example — never do this: including an entry whose "reason" is "This actually complies, not a violation" or "Compliant, skip" or "Not applicable, remove" or "placeholder". If you catch yourself writing a reason like that, delete the entire entry instead of including it. Every entry in "flags" must be a reason a human editor would act on, stated as a plain violation (e.g. "Uses jargon 'catchment area' instead of the preferred 'area'"), never as a note about why something was ruled out.`;
+Bad example — never do this: including an entry whose "reason" is "This actually complies, not a violation" or "Compliant, skip" or "Not applicable, remove" or "placeholder" or "...being flagged incorrectly here — this entry should not be included". If you catch yourself writing a reason like that, delete the entire entry instead of including it. Every entry in "flags" must be a reason a human editor would act on, stated as a plain violation (e.g. "Uses jargon 'catchment area' instead of the preferred 'area'"), never as a note about why something was ruled out.`;
 
 const SELF_NEGATING_PATTERNS = [
   /\bnot a violation\b/i,
+  /\bnot a real violation\b/i,
   /\bcompliant\b/i,
   /\bchecks? out\b/i,
   /\bno violation\b/i,
+  /\bdoes(?:n't| not) violate\b/i,
   /\breconsider\b/i,
   /\bremove\b/i,
   /\bskip\b/i,
@@ -51,6 +53,9 @@ const SELF_NEGATING_PATTERNS = [
   /\bnot present in\b/i,
   /\bexcluded\b/i,
   /\bactually\b/i,
+  /\bshould(?:n't| not) be (?:included|flagged|counted)\b/i,
+  /\bflagged incorrectly\b/i,
+  /\bshould(?:n't| not) apply\b/i,
 ];
 
 function isSelfNegating(reason: string): boolean {
