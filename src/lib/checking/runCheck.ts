@@ -35,7 +35,7 @@ export async function runDocumentCheck({
 
   // Suppressions apply last, and across every source — a suppression rule can silence a
   // client-rule flag, an LLM soft-rule flag, or a grammar flag alike.
-  const allFlags = applySuppressions(
+  const allFlags = await applySuppressions(
     [...deterministicFlags, ...llmFlags, ...grammarFlags],
     paragraphs,
     rules

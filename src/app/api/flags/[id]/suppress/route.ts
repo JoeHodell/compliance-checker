@@ -3,11 +3,18 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 
-const bodySchema = z.object({
-  description: z.string().min(1),
-  checkMode: z.enum(["literal", "regex"]),
-  value: z.string().min(1),
-});
+const bodySchema = z.discriminatedUnion("checkMode", [
+  z.object({
+    description: z.string().min(1),
+    checkMode: z.enum(["literal", "regex"]),
+    value: z.string().min(1),
+  }),
+  z.object({
+    description: z.string().min(1),
+    checkMode: z.literal("llm"),
+    instruction: z.string().min(1),
+  }),
+]);
 
 // Creates a suppression rule: rather than flagging new violations, it silences any flag
 // (from any rule, or grammar) that matches its pattern. Like a proposed rule, this is a new
@@ -29,7 +36,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
-  const { description, checkMode, value } = parsed.data;
+  const { description } = parsed.data;
+  const patternLogic =
+    parsed.data.checkMode === "llm"
+      ? { checkMode: parsed.data.checkMode, instruction: parsed.data.instruction }
+      : { checkMode: parsed.data.checkMode, value: parsed.data.value };
 
   const rule = await prisma.rule.create({
     data: {
@@ -38,7 +49,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       category: flag.category,
       description,
       severity: flag.severity,
-      patternLogic: { checkMode, value },
+      patternLogic,
       status: "PENDING",
       isSuppression: true,
       proposedById: user.id,
