@@ -90,7 +90,7 @@ const proposeRulesTool: Anthropic.Tool = {
             },
             value: {
               type: "string",
-              description: "DISCRETE rules with checkMode 'literal' or 'regex' only: the literal string or regex pattern to search for.",
+              description: "DISCRETE rules with checkMode 'literal' or 'regex' only: the literal string or regex pattern that matches the VIOLATION — the wrong/banned form — never the correct form the guide wants. For a preferred-spelling rule like 'antisemitism, not anti-Semitism', the pattern must match the wrong variants (regex 'anti[-\\s]Semitism'), NOT 'antisemitism'.",
             },
             instruction: {
               type: "string",
@@ -137,6 +137,8 @@ Do NOT extract pure reference/informational content that isn't a checkable rule:
 When the guide lists many similar word-swap pairs (e.g. a "plain language" cheat sheet) or many proper-noun/facility/place-name spellings in a row, bundle ALL of them into a single LOOKUP_TABLE rule with all term-pairs in "terms", rather than creating a separate DISCRETE rule per term. Only use DISCRETE for a standalone rule (a single banned word, a single formatting convention, a tone instruction).
 
 LOOKUP_TABLE term pairs are for unconditional word swaps only ("always write X as Y") — a "wrong" term should never be a value the document is allowed to use at all. Do NOT put an acronym in a LOOKUP_TABLE as "wrong" when the guide's actual rule is "spell out on first reference, abbreviate on later references" (e.g. PEPFAR, WHO) — that is a first-reference rule, not a banned term, so either skip it or extract it as a DISCRETE rule with checkMode "llm" describing the first-reference/subsequent-reference distinction. Never extract a term pair where "wrong" and "right" are the same word.
+
+For DISCRETE rules with checkMode "literal" or "regex", the "value" is what gets FLAGGED, so it must match only text that breaks the rule. When the guide says "use X, not Y" or "X is correct", the value must match Y (and any wrong variants of X — different hyphenation, spacing or capitalization), never X itself, or every correct use will be flagged as a violation. If the correct form can't be separated from the wrong ones with a literal or regex (e.g. the rule is about context), use checkMode "llm" instead.
 
 Do NOT extract generic proofreading-checklist reminders that tell a human editor to "double check" or "review" something for internal consistency (e.g. "double check consistent use of dashes," "check spacing is consistent") — these have no specific checkable pattern and would fire on every instance of the thing being reviewed, which isn't useful as an automated flag. Only extract a rule when the guide states a specific, checkable preference (e.g. "use an em dash, not two hyphens").
 
