@@ -49,7 +49,7 @@ function HighlightedSnippet({ snippet, matchedText }: { snippet: string; matched
   );
 }
 
-export function FlagList({ flags: initialFlags }: { flags: FlagItem[] }) {
+export function FlagList({ checkId, flags: initialFlags }: { checkId: string; flags: FlagItem[] }) {
   const router = useRouter();
   const [flags, setFlags] = useState(initialFlags);
   const [severityFilter, setSeverityFilter] = useState<string>("ALL");
@@ -69,6 +69,7 @@ export function FlagList({ flags: initialFlags }: { flags: FlagItem[] }) {
     const style = flags.filter((f) => f.severity === "STYLE" && f.status !== "DISMISSED").length;
     return { hard, style, clean: hard === 0 && style === 0 };
   }, [flags]);
+  const acceptedCount = useMemo(() => flags.filter((f) => f.status === "ACCEPTED").length, [flags]);
 
   const visibleFlags = useMemo(() => {
     let result = flags;
@@ -118,6 +119,16 @@ export function FlagList({ flags: initialFlags }: { flags: FlagItem[] }) {
             </>
           )}
         </div>
+        {acceptedCount > 0 ? (
+          <a
+            href={`/api/checks/${checkId}/export`}
+            className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50"
+          >
+            Download notes (.docx) · {acceptedCount} accepted
+          </a>
+        ) : (
+          <span className="text-sm text-slate-400">Accept flags to download them as notes in a Word doc.</span>
+        )}
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">

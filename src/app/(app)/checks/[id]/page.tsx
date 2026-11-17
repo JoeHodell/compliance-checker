@@ -52,7 +52,7 @@ export default async function CheckResultsPage({ params }: { params: Promise<{ i
           Checked against {documentCheck.client.name} — {documentCheck.uploadedAt.toLocaleString()}
         </p>
       </div>
-      <FlagList flags={flags} />
+      <FlagList checkId={documentCheck.id} flags={flags} />
     </div>
   );
 }
