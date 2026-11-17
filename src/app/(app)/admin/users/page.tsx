@@ -14,7 +14,7 @@ export default async function AdminUsersPage() {
     <div>
       <h1 className="mb-1 text-xl font-semibold text-slate-900">Users</h1>
       <p className="mb-6 text-sm text-slate-500">
-        Any admin can promote or demote any other employee. At least one admin must remain.
+        Any admin can promote or demote any other employee (at least one admin must remain) and reset a password — it generates a temporary one to hand over.
       </p>
 
       <Card className="p-5">
