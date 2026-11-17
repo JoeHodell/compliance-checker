@@ -13,7 +13,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const client = await prisma.client.findUnique({ where: { id: clientId } });
   if (!client) return NextResponse.json({ error: "Client not found" }, { status: 404 });
 
-  const formData = await request.formData();
+  let formData: FormData;
+  try {
+    formData = await request.formData();
+  } catch (err) {
+    console.error("Could not read guide upload", err);
+    return NextResponse.json(
+      { error: "The upload could not be read — the file(s) may be too large or the upload was interrupted. Try again." },
+      { status: 400 }
+    );
+  }
   const files = formData.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
   const pastedText = formData.get("text");
 
@@ -22,10 +31,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const filenames: string[] = [];
 
   for (const file of files) {
-    const parsedFile = await parseUploadedFile(file);
-    paragraphs.push(...parsedFile.paragraphs);
-    rawTextParts.push(parsedFile.rawText);
-    filenames.push(file.name);
+    try {
+      const parsedFile = await parseUploadedFile(file);
+      paragraphs.push(...parsedFile.paragraphs);
+      rawTextParts.push(parsedFile.rawText);
+      filenames.push(file.name);
+    } catch (err) {
+      console.error(`Could not parse ${file.name}`, err);
+      return NextResponse.json({ error: `Could not read "${file.name}" — is it a valid DOCX or PDF?` }, { status: 400 });
+    }
   }
   if (typeof pastedText === "string" && pastedText.trim().length > 0) {
     const parsedText = parsePlainText(pastedText);
